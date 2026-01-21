@@ -1,0 +1,1360 @@
+/* ===========================
+   Likert OMR - Ana Stiller
+   =========================== */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --primary: #3498db;
+    --primary-dark: #2980b9;
+    --success: #27ae60;
+    --success-dark: #1e8449;
+    --danger: #e74c3c;
+    --warning: #f39c12;
+    --dark: #2c3e50;
+    --darker: #1a252f;
+    --light: #ecf0f1;
+    --white: #ffffff;
+    --shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    --radius: 12px;
+    --transition: all 0.3s ease;
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--dark);
+    color: var(--white);
+    min-height: 100vh;
+    overflow: hidden;
+}
+
+#app {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    max-width: 500px;
+    margin: 0 auto;
+}
+
+/* Utility class for hiding elements */
+.hidden {
+    display: none !important;
+}
+
+/* ===========================
+   Üst Bar
+   =========================== */
+.top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    background: linear-gradient(135deg, var(--dark) 0%, var(--darker) 100%);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    position: relative;
+    z-index: 100;
+}
+
+.top-bar h1 {
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.icon-btn {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    padding: 8px;
+    transition: var(--transition);
+}
+
+.icon-btn:hover {
+    transform: scale(1.1);
+}
+
+/* ===========================
+   Sayfalar
+   =========================== */
+.page {
+    display: none;
+    flex: 1;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.page.active {
+    display: flex;
+}
+
+.page-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px;
+    background: var(--dark);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.page-header h2 {
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.back-btn {
+    background: none;
+    border: none;
+    color: var(--primary);
+    font-size: 16px;
+    cursor: pointer;
+    padding: 8px 0;
+    transition: var(--transition);
+}
+
+.back-btn:hover {
+    color: var(--primary-dark);
+}
+
+/* ===========================
+   Kamera Sayfası
+   =========================== */
+.camera-container {
+    flex: 1;
+    position: relative;
+    background: #000;
+    overflow: hidden;
+}
+
+#cameraFeed {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+#overlayCanvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+/* A4 Tarama Çerçevesi (1:1.414 oranı) */
+.scan-frame {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    border: 3px solid var(--success);
+    border-radius: 8px;
+    pointer-events: none;
+    transition: var(--transition);
+}
+
+.scan-frame.a4-frame {
+    width: 70%;
+    aspect-ratio: 1 / 1.414;
+    max-height: 80%;
+}
+
+.scan-frame.detecting {
+    border-color: var(--warning);
+    box-shadow: 0 0 20px rgba(243, 156, 18, 0.5);
+}
+
+.scan-frame.ready {
+    border-color: var(--success);
+    box-shadow: 0 0 20px rgba(39, 174, 96, 0.5);
+}
+
+.scan-frame .corner {
+    position: absolute;
+    width: 30px;
+    height: 30px;
+    border: 4px solid var(--success);
+}
+
+.corner.top-left {
+    top: -4px;
+    left: -4px;
+    border-right: none;
+    border-bottom: none;
+    border-radius: 8px 0 0 0;
+}
+
+.corner.top-right {
+    top: -4px;
+    right: -4px;
+    border-left: none;
+    border-bottom: none;
+    border-radius: 0 8px 0 0;
+}
+
+.corner.bottom-left {
+    bottom: -4px;
+    left: -4px;
+    border-right: none;
+    border-top: none;
+    border-radius: 0 0 0 8px;
+}
+
+.corner.bottom-right {
+    bottom: -4px;
+    right: -4px;
+    border-left: none;
+    border-top: none;
+    border-radius: 0 0 8px 0;
+}
+
+.frame-label {
+    position: absolute;
+    bottom: -30px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.7);
+    color: var(--white);
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 12px;
+    white-space: nowrap;
+}
+
+/* Geri Sayım */
+.countdown {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 120px;
+    height: 120px;
+    background: rgba(39, 174, 96, 0.9);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: pulse 1s ease-in-out infinite;
+    z-index: 50;
+}
+
+.countdown.hidden {
+    display: none;
+}
+
+#countdownNumber {
+    font-size: 60px;
+    font-weight: 700;
+    color: var(--white);
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        transform: translate(-50%, -50%) scale(1);
+    }
+
+    50% {
+        transform: translate(-50%, -50%) scale(1.1);
+    }
+}
+
+/* Durum Mesajı */
+.status-message {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.7);
+    color: var(--white);
+    padding: 10px 20px;
+    border-radius: 20px;
+    font-size: 14px;
+    text-align: center;
+    max-width: 90%;
+    transition: var(--transition);
+}
+
+.status-message.success {
+    background: rgba(39, 174, 96, 0.9);
+}
+
+.status-message.error {
+    background: rgba(231, 76, 60, 0.9);
+}
+
+.status-message.warning {
+    background: rgba(243, 156, 18, 0.9);
+}
+
+/* Alt Kontroller */
+.bottom-controls {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    padding: 12px 8px;
+    background: var(--dark);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.control-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    background: none;
+    border: none;
+    color: var(--light);
+    font-size: 11px;
+    cursor: pointer;
+    padding: 8px 12px;
+    position: relative;
+    transition: var(--transition);
+}
+
+.control-btn:hover {
+    color: var(--white);
+}
+
+.control-btn.primary {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    border-radius: 50%;
+    width: 64px;
+    height: 64px;
+    font-size: 28px;
+    box-shadow: var(--shadow);
+}
+
+.control-btn.primary:hover {
+    transform: scale(1.05);
+}
+
+.control-btn.primary:active {
+    transform: scale(0.95);
+}
+
+.control-btn .badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: var(--danger);
+    color: var(--white);
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 10px;
+    min-width: 18px;
+}
+
+/* ===========================
+   Ayarlar Sayfası
+   =========================== */
+.settings-content {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+}
+
+.setting-group {
+    margin-bottom: 20px;
+}
+
+.setting-group label {
+    display: block;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--light);
+    margin-bottom: 8px;
+}
+
+.setting-hint {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.5);
+    margin-bottom: 8px;
+}
+
+.setting-group input,
+.setting-group select,
+.setting-group textarea {
+    width: 100%;
+    padding: 14px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: var(--radius);
+    color: var(--white);
+    font-size: 16px;
+    font-family: inherit;
+    transition: var(--transition);
+}
+
+.setting-group textarea {
+    resize: vertical;
+    min-height: 60px;
+}
+
+.setting-group input:focus,
+.setting-group select:focus,
+.setting-group textarea:focus {
+    outline: none;
+    border-color: var(--primary);
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.setting-group input::placeholder,
+.setting-group textarea::placeholder {
+    color: rgba(255, 255, 255, 0.4);
+}
+
+/* Likert Etiketleri */
+.likert-labels {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.likert-label-input {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.likert-label-input span {
+    min-width: 24px;
+    font-weight: 600;
+}
+
+.likert-label-input input {
+    flex: 1;
+}
+
+/* Madde Metinleri Editörü */
+.items-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.items-header label {
+    margin-bottom: 0;
+}
+
+.btn-small {
+    padding: 8px 14px;
+    font-size: 12px;
+    background: var(--primary);
+    color: var(--white);
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.btn-small:hover {
+    background: var(--primary-dark);
+    transform: translateY(-1px);
+}
+
+.item-texts-container {
+    max-height: 400px;
+    overflow-y: auto;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: var(--radius);
+    padding: 12px;
+}
+
+.item-texts-container .empty-hint {
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 13px;
+    text-align: center;
+    padding: 20px;
+}
+
+.item-text-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 10px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.item-text-row:last-child {
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom: none;
+}
+
+.item-number {
+    min-width: 36px;
+    height: 36px;
+    background: var(--primary);
+    color: var(--white);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 13px;
+    flex-shrink: 0;
+}
+
+.item-number.reverse {
+    background: var(--warning);
+}
+
+.item-text-input {
+    flex: 1;
+    padding: 10px 12px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    color: var(--white);
+    font-size: 14px;
+    resize: vertical;
+    min-height: 40px;
+    font-family: inherit;
+}
+
+.item-text-input:focus {
+    outline: none;
+    border-color: var(--primary);
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.item-text-input::placeholder {
+    color: rgba(255, 255, 255, 0.4);
+}
+
+/* Demografik Alanlar */
+.demographics-container {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: var(--radius);
+    padding: 12px;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.demographic-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.demographic-row input {
+    flex: 1;
+    padding: 10px 12px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    color: var(--white);
+    font-size: 14px;
+}
+
+.demographic-row input:focus {
+    outline: none;
+    border-color: var(--primary);
+}
+
+.demographic-delete {
+    background: var(--danger);
+    border: none;
+    color: var(--white);
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 14px;
+    flex-shrink: 0;
+    transition: var(--transition);
+}
+
+.demographic-delete:hover {
+    transform: scale(1.1);
+}
+
+
+/* ===========================
+   Butonlar
+   =========================== */
+.btn {
+    padding: 14px 24px;
+    border: none;
+    border-radius: var(--radius);
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.btn.primary {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    color: var(--white);
+}
+
+.btn.primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(52, 152, 219, 0.4);
+}
+
+.btn.success {
+    background: linear-gradient(135deg, var(--success) 0%, var(--success-dark) 100%);
+    color: var(--white);
+}
+
+.btn.success:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(39, 174, 96, 0.4);
+}
+
+.btn.danger {
+    background: var(--danger);
+    color: var(--white);
+}
+
+.btn.danger:hover {
+    opacity: 0.9;
+}
+
+.btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+.btn.full-width {
+    width: 100%;
+}
+
+.form-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 20px;
+}
+
+.form-actions .btn {
+    flex: 1;
+    min-width: 100px;
+}
+
+/* ===========================
+   Formlar Listesi
+   =========================== */
+.forms-list {
+    flex: 1;
+    padding: 16px;
+    overflow-y: auto;
+}
+
+.form-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: var(--radius);
+    margin-bottom: 12px;
+    transition: var(--transition);
+}
+
+.form-item:hover {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.form-item-info {
+    flex: 1;
+}
+
+.form-item-name {
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.form-item-details {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.form-item-score {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--success);
+}
+
+.form-item-delete {
+    background: var(--danger);
+    border: none;
+    color: var(--white);
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 16px;
+    transition: var(--transition);
+}
+
+.form-item-delete:hover {
+    transform: scale(1.1);
+}
+
+.bottom-actions {
+    display: flex;
+    gap: 12px;
+    padding: 16px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.bottom-actions .btn {
+    flex: 1;
+}
+
+/* ===========================
+   Modal
+   =========================== */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 20px;
+}
+
+.modal.hidden {
+    display: none;
+}
+
+.modal-content {
+    background: var(--dark);
+    padding: 24px;
+    border-radius: var(--radius);
+    max-width: 90%;
+    width: 350px;
+    text-align: center;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.modal-content.wide {
+    width: 450px;
+}
+
+.modal-content h3 {
+    margin-bottom: 16px;
+    font-size: 20px;
+}
+
+.modal-actions {
+    margin-top: 20px;
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+}
+
+.result-score {
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--success);
+    margin-bottom: 16px;
+}
+
+.item-scores {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+    margin-bottom: 16px;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.item-score {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 6px;
+    border-radius: 4px;
+    font-size: 11px;
+}
+
+.item-score.error {
+    background: rgba(231, 76, 60, 0.3);
+    color: var(--danger);
+}
+
+.item-score.reversed {
+    background: rgba(243, 156, 18, 0.3);
+    border: 1px solid var(--warning);
+}
+
+.error-items {
+    background: rgba(231, 76, 60, 0.2);
+    padding: 12px;
+    border-radius: var(--radius);
+    margin-top: 12px;
+}
+
+.error-items.hidden {
+    display: none;
+}
+
+.error-label {
+    font-size: 14px;
+    margin-bottom: 8px;
+    color: var(--danger);
+}
+
+/* Progress Bar */
+.progress-bar {
+    width: 100%;
+    height: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 12px;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary) 0%, var(--success) 100%);
+    width: 0%;
+    transition: width 0.3s ease;
+}
+
+.gallery-results {
+    max-height: 200px;
+    overflow-y: auto;
+    margin-top: 16px;
+    text-align: left;
+}
+
+.gallery-result-item {
+    padding: 8px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    font-size: 13px;
+}
+
+.gallery-result-item.success {
+    color: var(--success);
+}
+
+.gallery-result-item.error {
+    color: var(--danger);
+}
+
+/* ===========================
+   Form Oluşturucu
+   =========================== */
+.form-creator-content {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+}
+
+.form-preview {
+    margin-top: 20px;
+    background: var(--white);
+    color: #000;
+    padding: 20px;
+    border-radius: var(--radius);
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.form-preview.hidden {
+    display: none;
+}
+
+.form-preview-header {
+    text-align: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #000;
+}
+
+.form-preview-title {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+
+.form-preview-desc {
+    font-size: 12px;
+    color: #666;
+}
+
+.form-preview-student {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 15px;
+    font-size: 12px;
+}
+
+.form-preview-student div {
+    border-bottom: 1px solid #000;
+    padding: 5px 0;
+}
+
+.form-preview-section-title {
+    font-weight: 700;
+    font-size: 14px;
+    color: #000;
+    margin: 15px 0 10px 0;
+    padding-bottom: 5px;
+    border-bottom: 2px solid #333;
+}
+
+.form-preview-likert-labels {
+    display: flex;
+    justify-content: flex-end;
+    gap: 5px;
+    margin-bottom: 15px;
+    padding-left: 100px;
+}
+
+.likert-label-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 50px;
+    text-align: center;
+}
+
+.likert-label-col .likert-num {
+    font-weight: 700;
+    font-size: 14px;
+    margin-top: 5px;
+}
+
+.likert-label-col .likert-text {
+    font-size: 8px;
+    color: #333;
+    line-height: 1.2;
+    word-wrap: break-word;
+    max-width: 50px;
+}
+
+.form-preview-likert-header {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-bottom: 10px;
+    font-size: 10px;
+    text-align: center;
+}
+
+.form-preview-likert-header span {
+    width: 30px;
+}
+
+.form-preview-item {
+    display: flex;
+    align-items: flex-start;
+    padding: 10px 0;
+    border-bottom: 1px solid #ccc;
+    font-size: 12px;
+    min-height: 35px;
+}
+
+.form-preview-item-left {
+    flex: 1;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding-right: 15px;
+}
+
+.form-preview-item-num {
+    min-width: 30px;
+    font-weight: 600;
+    flex-shrink: 0;
+}
+
+.form-preview-item-text {
+    flex: 1;
+    font-size: 11px;
+    color: #333;
+    line-height: 1.4;
+    word-wrap: break-word;
+    white-space: normal;
+}
+
+.form-preview-item-dots {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    flex-shrink: 0;
+    align-items: center;
+    min-height: 25px;
+}
+
+.form-preview-dot {
+    width: 20px;
+    height: 20px;
+    border: 2px solid #000;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+
+/* ===========================
+   Boş Liste
+   =========================== */
+.empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.empty-state-icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+}
+
+/* ===========================
+   Yükleniyor Overlay
+   =========================== */
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    gap: 16px;
+}
+
+.loading-overlay.hidden {
+    display: none;
+}
+
+.spinner {
+    width: 50px;
+    height: 50px;
+    border: 4px solid rgba(255, 255, 255, 0.2);
+    border-top-color: var(--primary);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* ===========================
+   Responsive
+   =========================== */
+@media (max-width: 380px) {
+    .control-btn {
+        padding: 6px 8px;
+        font-size: 10px;
+    }
+
+    .control-btn.primary {
+        width: 56px;
+        height: 56px;
+        font-size: 24px;
+    }
+
+    .item-scores {
+        grid-template-columns: repeat(5, 1fr);
+    }
+}
+
+/* ===========================
+   Print Styles (Form Oluşturucu için)
+   =========================== */
+@media print {
+    body {
+        background: white;
+        color: black;
+    }
+
+    .form-preview {
+        max-height: none;
+        padding: 0;
+    }
+}
+
+/* ===========================
+   Context Menu (Sağ Tık Menüsü)
+   =========================== */
+.context-menu {
+    position: fixed;
+    background: var(--darker);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    z-index: 1000;
+    min-width: 150px;
+    overflow: hidden;
+}
+
+.context-menu button {
+    display: block;
+    width: 100%;
+    padding: 12px 16px;
+    background: transparent;
+    border: none;
+    color: var(--white);
+    text-align: left;
+    cursor: pointer;
+    font-size: 14px;
+    transition: var(--transition);
+}
+
+.context-menu button:hover {
+    background: var(--primary);
+}
+
+.context-menu button[data-action="delete"]:hover {
+    background: var(--danger);
+}
+
+/* ===========================
+   View Toggle
+   =========================== */
+.view-toggle {
+    display: flex;
+    gap: 8px;
+    padding: 10px 16px;
+    background: rgba(0, 0, 0, 0.2);
+}
+
+.view-toggle .btn.small {
+    padding: 8px 16px;
+    font-size: 13px;
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    border-radius: 6px;
+    color: var(--white);
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.view-toggle .btn.small.active {
+    background: var(--primary);
+}
+
+/* ===========================
+   Results Table
+   =========================== */
+.results-table {
+    padding: 16px;
+    overflow-x: auto;
+    flex: 1;
+}
+
+.results-table table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+}
+
+.results-table th,
+.results-table td {
+    padding: 8px 6px;
+    text-align: center;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.results-table th {
+    background: var(--primary);
+    position: sticky;
+    top: 0;
+}
+
+.results-table tr:nth-child(even) {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.results-table td.reversed {
+    background: rgba(231, 76, 60, 0.3);
+    color: #ff6b6b;
+}
+
+.results-table td.form-name {
+    text-align: left;
+    font-weight: 500;
+    max-width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* ===========================
+   Templates List
+   =========================== */
+.templates-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+}
+
+.template-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+    margin-bottom: 10px;
+    transition: var(--transition);
+}
+
+.template-item:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.template-item.selected {
+    background: rgba(52, 152, 219, 0.3);
+    border: 2px solid var(--primary);
+}
+
+.template-info h4 {
+    margin-bottom: 4px;
+    color: var(--white);
+}
+
+.template-info p {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.template-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.template-actions button {
+    padding: 8px 12px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: var(--transition);
+}
+
+.template-actions .select-btn {
+    background: var(--primary);
+    color: white;
+}
+
+.template-actions .delete-btn {
+    background: var(--danger);
+    color: white;
+}
+
+/* ===========================
+   Page Info
+   =========================== */
+.page-info {
+    padding: 12px 16px;
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.7);
+    background: rgba(0, 0, 0, 0.2);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* ===========================
+   Empty State
+   =========================== */
+.empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.empty-state .icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+    opacity: 0.5;
+}
+
+.empty-state p {
+    font-size: 14px;
+}
+
+/* ===========================
+   Image Preview Modal
+   =========================== */
+.image-preview-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.9);
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.image-preview-content {
+    max-width: 90%;
+    max-height: 90%;
+    display: flex;
+    flex-direction: column;
+}
+
+.image-preview-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 16px;
+    background: var(--darker);
+    border-radius: 8px 8px 0 0;
+    color: var(--white);
+}
+
+.image-preview-header button {
+    background: transparent;
+    border: none;
+    color: var(--white);
+    font-size: 24px;
+    cursor: pointer;
+    padding: 4px 8px;
+}
+
+.image-preview-header button:hover {
+    color: var(--danger);
+}
+
+.image-preview-content img {
+    max-width: 100%;
+    max-height: calc(90vh - 60px);
+    object-fit: contain;
+    border-radius: 0 0 8px 8px;
+}
+
+/* Form item cursor pointer for click */
+.form-item {
+    cursor: pointer;
+}
+
+.form-item:hover {
+    transform: translateX(4px);
+}

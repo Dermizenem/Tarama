@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#2c3e50">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Likert OMR Tarayıcı</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <!-- Ana Konteyner -->
+    <div id="app">
+        <!-- Üst Bar -->
+        <header class="top-bar">
+            <h1>📋 Likert OMR</h1>
+            <button id="settingsBtn" class="icon-btn">⚙️</button>
+        </header>
+
+        <!-- Sayfa: Kamera -->
+        <section id="cameraPage" class="page active">
+            <div class="camera-container">
+                <video id="cameraFeed" autoplay playsinline></video>
+                <canvas id="overlayCanvas"></canvas>
+
+                <!-- A4 Tarama Çerçevesi -->
+                <div class="scan-frame a4-frame">
+                    <div class="corner top-left"></div>
+                    <div class="corner top-right"></div>
+                    <div class="corner bottom-left"></div>
+                    <div class="corner bottom-right"></div>
+                    <div class="frame-label">Formu çerçeveye hizalayın</div>
+                </div>
+
+                <!-- Geri Sayım -->
+                <div id="countdown" class="countdown hidden">
+                    <span id="countdownNumber">3</span>
+                </div>
+
+                <!-- Durum Mesajı -->
+                <div id="statusMessage" class="status-message">
+                    Sistem başlatılıyor...
+                </div>
+            </div>
+
+            <!-- Alt Butonlar -->
+            <div class="bottom-controls">
+                <button id="savedFormsBtn" class="control-btn">
+                    <span class="badge" id="formCount">0</span>
+                    📁 Formlar
+                </button>
+                <button id="galleryBtn" class="control-btn">
+                    🖼️ Galeri
+                </button>
+                <input type="file" id="galleryInput" accept="image/*" multiple hidden>
+                <button id="manualCaptureBtn" class="control-btn primary">
+                    📷
+                </button>
+                <button id="myTemplatesBtn" class="control-btn">
+                    📋 Şablonlarım
+                </button>
+                <button id="createFormBtn" class="control-btn">
+                    ➕ Yeni
+                </button>
+            </div>
+        </section>
+
+        <!-- Sayfa: Ayarlar -->
+        <section id="settingsPage" class="page">
+            <div class="page-header">
+                <button class="back-btn" data-target="cameraPage">← Geri</button>
+                <h2>Ayarlar</h2>
+            </div>
+
+            <div class="settings-content">
+                <div class="setting-group">
+                    <label>Madde Sayısı</label>
+                    <input type="number" id="itemCount" min="1" max="100" value="21">
+                </div>
+
+                <div class="setting-group">
+                    <label>Likert Tipi</label>
+                    <select id="likertType">
+                        <option value="3">3'lü Likert (1-3)</option>
+                        <option value="5" selected>5'li Likert (1-5)</option>
+                        <option value="7">7'li Likert (1-7)</option>
+                    </select>
+                </div>
+
+                <div class="setting-group">
+                    <label>Otomatik Kayıt Süresi</label>
+                    <select id="autoSaveDelay">
+                        <option value="3">3 Saniye</option>
+                        <option value="5" selected>5 Saniye</option>
+                        <option value="7">7 Saniye</option>
+                        <option value="0">Kapalı (Manuel)</option>
+                    </select>
+                </div>
+
+                <div class="setting-group">
+                    <label>Puanlama Yönü</label>
+                    <select id="scoreDirection">
+                        <option value="low_to_high" selected>Sol→Sağ: 1,2,3,4,5</option>
+                        <option value="high_to_low">Sol→Sağ: 5,4,3,2,1</option>
+                    </select>
+                </div>
+
+                <!-- Ters Maddeler -->
+                <div class="setting-group">
+                    <label>Ters Puanlanan Maddeler</label>
+                    <p class="setting-hint">Virgülle ayırarak girin (ör: 3,5,7,12)</p>
+                    <input type="text" id="reverseItems" placeholder="Ör: 3,5,7,12">
+                </div>
+
+                <button id="saveSettingsBtn" class="btn primary">💾 Kaydet</button>
+            </div>
+        </section>
+
+        <!-- Sayfa: Kaydedilen Formlar (Tarama Sonuçları) -->
+        <section id="savedFormsPage" class="page">
+            <div class="page-header">
+                <button class="back-btn" data-target="cameraPage">← Geri</button>
+                <h2>Tarama Sonuçları</h2>
+            </div>
+
+            <!-- Görünüm Seçimi -->
+            <div class="view-toggle">
+                <button id="listViewBtn" class="btn small active">📋 Liste</button>
+                <button id="tableViewBtn" class="btn small">📊 Tablo</button>
+            </div>
+
+            <!-- Liste Görünümü -->
+            <div id="formsList" class="forms-list">
+                <!-- Formlar dinamik yüklenecek -->
+            </div>
+
+            <!-- Tablo Görünümü (Sonuçlar) -->
+            <div id="resultsTable" class="results-table hidden">
+                <!-- Sonuç tablosu dinamik yüklenecek -->
+            </div>
+
+            <div class="bottom-actions">
+                <button id="saveChangesBtn" class="btn primary">💾 Kaydet</button>
+                <button id="exportExcelBtn" class="btn success">📊 Excel'e Aktar</button>
+                <button id="clearAllBtn" class="btn danger">🗑️ Tümünü Sil</button>
+            </div>
+        </section>
+
+        <!-- Context Menu (Sağ Tık Menüsü) -->
+        <div id="contextMenu" class="context-menu hidden">
+            <button data-action="reverse">🔄 Ters Puanla</button>
+            <button data-action="delete">🗑️ Sil</button>
+        </div>
+
+        <!-- Sayfa: Form Şablonlarım -->
+        <section id="templatesPage" class="page">
+            <div class="page-header">
+                <button class="back-btn" data-target="cameraPage">← Geri</button>
+                <h2>Kayıtlı Form Şablonlarım</h2>
+            </div>
+
+            <p class="page-info">Oluşturduğunuz form şablonlarını burada görebilir, tarama için seçebilir veya
+                silebilirsiniz.</p>
+
+            <div id="templatesList" class="templates-list">
+                <!-- Şablonlar dinamik yüklenecek -->
+            </div>
+
+            <div class="bottom-actions">
+                <button id="newTemplateBtn" class="btn primary" onclick="UI.showPage('createFormPage')">
+                    ➕ Yeni Şablon Oluştur
+                </button>
+            </div>
+        </section>
+
+        <!-- Sayfa: Form Oluştur -->
+        <section id="createFormPage" class="page">
+            <div class="page-header">
+                <button class="back-btn" data-target="cameraPage">← Geri</button>
+                <h2>Form Oluştur</h2>
+            </div>
+
+            <div class="form-creator-content">
+                <div class="setting-group">
+                    <label>Ölçek Başlığı</label>
+                    <input type="text" id="formTitle" placeholder="Örn: Öğrenme Motivasyonu Ölçeği">
+                </div>
+
+                <div class="setting-group">
+                    <label>Açıklama</label>
+                    <textarea id="formDescription" rows="2" placeholder="Yönerge metni..."></textarea>
+                </div>
+
+                <!-- Demografik Bilgiler -->
+                <div class="setting-group">
+                    <div class="items-header">
+                        <label>Katılımcı Bilgi Alanları</label>
+                        <button id="addDemographicBtn" class="btn-small">➕ Alan Ekle</button>
+                    </div>
+                    <p class="setting-hint">Forma eklenecek bilgi alanlarını tanımlayın (Ad Soyad, Tarih, Cinsiyet vb.)
+                    </p>
+                    <div id="demographicsContainer" class="demographics-container">
+                        <!-- Varsayılan alanlar -->
+                    </div>
+                </div>
+
+                <div class="setting-group">
+                    <label>Madde Sayısı</label>
+                    <input type="number" id="newFormItems" min="1" max="100" value="21">
+                </div>
+
+                <div class="setting-group">
+                    <label>Likert Tipi</label>
+                    <select id="newFormLikert">
+                        <option value="3">3'lü Likert</option>
+                        <option value="5" selected>5'li Likert</option>
+                        <option value="7">7'li Likert</option>
+                    </select>
+                </div>
+
+                <div class="setting-group">
+                    <label>Likert Etiketleri</label>
+                    <div id="likertLabelsContainer" class="likert-labels">
+                        <!-- Dinamik olarak doldurulacak -->
+                    </div>
+                </div>
+
+                <div class="setting-group">
+                    <label>Ters Puanlanan Maddeler</label>
+                    <p class="setting-hint">Virgülle ayırarak girin</p>
+                    <input type="text" id="newFormReverseItems" placeholder="Ör: 3,5,7">
+                </div>
+
+                <!-- Madde Metinleri Bölümü -->
+                <div class="setting-group">
+                    <div class="items-header">
+                        <label>Madde Metinleri</label>
+                        <button id="generateItemsBtn" class="btn-small">📝 Maddeleri Oluştur</button>
+                    </div>
+                    <p class="setting-hint">Her madde için soru/ifade metnini girin. Boş bırakılan maddeler numaralı
+                        olarak gösterilir.</p>
+                    <div id="itemTextsContainer" class="item-texts-container">
+                        <!-- Madde input'ları dinamik olarak oluşturulacak -->
+                        <p class="empty-hint">Yukarıdaki "Madde Sayısı"nı belirleyip "📝 Maddeleri Oluştur" butonuna
+                            tıklayın.</p>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button id="previewFormBtn" class="btn">👁️ Önizle</button>
+                    <button id="generatePDFBtn" class="btn primary">📄 PDF İndir</button>
+                    <button id="generatePNGBtn" class="btn">🖼️ PNG İndir</button>
+                    <button id="saveTemplateBtn" class="btn success">💾 Şablon Kaydet</button>
+                </div>
+
+                <div id="formPreview" class="form-preview hidden">
+                    <!-- Form önizlemesi -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Sonuç Modalı -->
+        <div id="resultModal" class="modal hidden">
+            <div class="modal-content">
+                <h3>✅ Form Okundu</h3>
+                <div id="resultDetails">
+                    <p class="result-score">Toplam: <span id="totalScore">0</span></p>
+                    <div id="itemScores" class="item-scores"></div>
+                    <div id="errorItems" class="error-items hidden">
+                        <p class="error-label">⚠️ Okunamayan Maddeler:</p>
+                        <span id="errorItemsList"></span>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button id="closeResultBtn" class="btn">Tamam</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Galeri İşleme Modalı -->
+        <div id="galleryProcessModal" class="modal hidden">
+            <div class="modal-content wide">
+                <h3>🖼️ Galeri Görüntüleri İşleniyor</h3>
+                <div id="galleryProgress">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="galleryProgressFill"></div>
+                    </div>
+                    <p id="galleryProgressText">0 / 0</p>
+                </div>
+                <div id="galleryResults" class="gallery-results"></div>
+                <div class="modal-actions">
+                    <button id="closeGalleryBtn" class="btn" disabled>Kapat</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Yükleniyor Overlay -->
+        <div id="loadingOverlay" class="loading-overlay hidden">
+            <div class="spinner"></div>
+            <p>İşleniyor...</p>
+        </div>
+    </div>
+
+    <!-- Harici Kütüphaneler -->
+    <!-- OpenCV.js -->
+    <script async src="https://docs.opencv.org/4.x/opencv.js" onload="onOpenCvReady()"></script>
+
+    <!-- SheetJS (Excel Export) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+    <!-- jsPDF (PDF Oluşturma) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <!-- Uygulama Scripts -->
+    <script src="js/storage.js"></script>
+    <script src="js/camera.js"></script>
+    <script src="js/omr.js"></script>
+    <script src="js/formGenerator.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/app.js"></script>
+</body>
+
+</html>
